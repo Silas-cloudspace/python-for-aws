@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Resources:
+  # IAM Role for Lambda
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaEC2SnapshotPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - ec2:CreateSnapshot
+                  - ec2:DescribeInstances
+                  - ec2:DescribeSnapshots
+                  - ec2:CreateTags
+                Resource: "*"
+
+  LambdaEC2DailySnapshot:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: LambdaEC2DailySnapshot
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.12
+      CodeUri: .
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 60
+      Environment:
+        Variables:
+          LOG_LEVEL: INFO
+          INSTANCE_TAG_KEY: "Name"
+          INSTANCE_TAG_VALUE: "My Daily Snapshot"
+
+  # EC2 Instance
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0c0493bbac867d427  # Update with your preferred AMI ID
+      Tags:
+        - Key: Name
+          Value: "My Daily Snapshot"
+  
+  # EventBridge Rule
+  DailyEC2SnapshotRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: daily_ec2_snapshot
+      ScheduleExpression: rate(24 hours)  # Set to a daily schedule
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt LambdaEC2DailySnapshot.Arn
+          Id: LambdaEC2DailySnapshotTarget
+          Input: '{}'
+
+  # Lambda Permission to be triggered by EventBridge
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaEC2DailySnapshot
+      Principal: events.amazonaws.com
+      SourceArn: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/daily_ec2_snapshot
+
+Outputs:
+  LambdaFunctionArn:
+    Description: "ARN of the Lambda Function"
+    Value: !GetAtt LambdaEC2DailySnapshot.Arn
+
+  EC2InstanceId:
+    Description: "ID of the EC2 Instance"
+    Value: !Ref EC2Instance
