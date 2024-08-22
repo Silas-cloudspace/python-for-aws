@@ -11,7 +11,9 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: lambda.amazonaws.com
+              Service:
+                - lambda.amazonaws.com
+                - events.amazonaws.com
             Action: sts:AssumeRole
       Policies:
         - PolicyName: LambdaEC2SnapshotPolicy
@@ -29,6 +31,7 @@ Resources:
                   - ec2:CreateTags
                 Resource: "*"
 
+  # Lambda Function
   LambdaEC2DailySnapshot:
     Type: AWS::Serverless::Function
     Properties:
@@ -53,27 +56,27 @@ Resources:
       Tags:
         - Key: Name
           Value: "My Daily Snapshot"
-  
-  # EventBridge Rule
-  DailyEC2SnapshotRule:
+
+  # EventBridge Rule to trigger Lambda
+  DailyEC2SnapshotSchedule:
     Type: AWS::Events::Rule
     Properties:
-      Name: daily_ec2_snapshot
-      ScheduleExpression: rate(24 hours)  # Set to a daily schedule
+      Name: daily_ec2_snapshot_schedule
+      ScheduleExpression: rate(2 minutes)  # Adjust this to your required frequency
       State: ENABLED
       Targets:
         - Arn: !GetAtt LambdaEC2DailySnapshot.Arn
-          Id: LambdaEC2DailySnapshotTarget
-          Input: '{}'
+          Id: "LambdaTarget"
+      RoleArn: !GetAtt LambdaExecutionRole.Arn
 
-  # Lambda Permission to be triggered by EventBridge
+  # Permission for EventBridge to invoke the Lambda function
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LambdaEC2DailySnapshot
       Principal: events.amazonaws.com
-      SourceArn: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/daily_ec2_snapshot
+      SourceArn: !GetAtt DailyEC2SnapshotSchedule.Arn
 
 Outputs:
   LambdaFunctionArn:
