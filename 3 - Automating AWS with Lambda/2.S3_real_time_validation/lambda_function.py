@@ -4,7 +4,6 @@ import csv
 import boto3
 from datetime import datetime
 
-
 def lambda_handler(event, context):
     
     # Initialize the s3 resource using boto3
@@ -15,7 +14,7 @@ def lambda_handler(event, context):
     csv_file = event['Records'][0]['s3']['object']['key']
     
     # Define the name of the error bucket where you want to copy the erroneous CSV files
-    error_bucket = 'dct-billing-errors'
+    error_bucket = 'dct-billing-errors-st'
     
     # Download the CSV file from S3, read the content, decode from bytes to string, and split the content by lines
     obj = s3.Object(billing_bucket, csv_file)
@@ -47,7 +46,12 @@ def lambda_handler(event, context):
             error_found = True
             print(f"Error in record {row[0]}: Unrecognized currency: {currency}.")
             break
+        
         # Check if the bill amount is negative. If so, set error flag to true and print an error message
+        if bill_amount < 0:
+            error_found = True
+            print(f"Error in record {row[0]}: Negative bill amount: {bill_amount}.")
+            break
         
         # Check if the date is in the correct format ('%Y-%m-%d'). If not, set error flag to true and print an error message
         try:
@@ -56,6 +60,7 @@ def lambda_handler(event, context):
             error_found = True
             print(f"Error in record {row[0]}: incorrect date format: {date}.")
             break
+        
     # After checking all rows, if an error is found, copy the CSV file to the error bucket and delete it from the original bucket
     if error_found:
         copy_source = {

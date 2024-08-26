@@ -1,6 +1,6 @@
 import boto3
 
-# Instantiate a boto3 resource for S3 and name your bucket
+# Create a boto3 resource for S3 and name your bucket
 s3 = boto3.resource('s3')
 bucket_name = 'st-crud-1'
 region = 'eu-west-2'  # Replace with the desired region
