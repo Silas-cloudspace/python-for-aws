@@ -73,7 +73,7 @@ Create a new file:
 
 ## IX.	Add a trigger to the Lambda function
 
-Crete a new file:
+Create a new file:
 
 •	touch lambda_trigger.py
 
