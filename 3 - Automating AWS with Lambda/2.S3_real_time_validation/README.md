@@ -8,21 +8,29 @@ It will then validate the file and if any discrepancies are found, it will move 
 ## I.	Create a Lambda function:
 
 •	Go to the AWS console, Lambda, and create a Lambda function
+
 •	Choose "Author from scratch". 
+
 •	In the Function name field, enter BillingBucketParser. 
+
 •	For the Runtime, select Python 3.12
 
 ## II.	Create two S3 buckets
 
 •	Create two S3 buckets, one for uploading csv files and other for error files.
+
 •	touch s3_buckets.py
+
 •	Paste into it the code from the GitHub repository.
+
 •	Run: python s3_buckets.py
 
 ## III.	Create three files in VS code:
 
 •	touch lambda_function.py template.yaml event.json
+
 •	Paste into them the codes from the GitHub repository.
+
 •	Run: python lambda_function.py
 
 ## IV.	File upload
@@ -48,27 +56,37 @@ It will then validate the file and if any discrepancies are found, it will move 
 ## VII.	Update the Lambda function permissions
 
 •	touch update_policies.py
+
 •	Paste into it the code from the GitHub repository.
+
 •	Run: python update_policies.py
 
 ## VIII.	Increase Lambda function timeout
 
 Create a new file:
+
 •	touch increase_lambda_timeout.py
+
 •	Paste into it the code from the GitHub repository.
+
 •	Run: python increase_lambda_timeout.py
 
 ## IX.	Add a trigger to the Lambda function
 
 Crete a new file:
+
 •	touch lambda_trigger.py
+
 •	Paste into it the code from the GitHub repository.
+
 •	Run: python lambda_trigger.py
 
 ## X.	Update the Lambda function 
 
 •	touch update_lambda_function.py
+
 •	Paste into it the code from the GitHub repository.
+
 •	Run: python update_lambda_function.py
 
 ## XI.	Test it out
